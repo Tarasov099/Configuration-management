@@ -143,8 +143,8 @@ print("\n" + "="*20 + "\n")
 print("Попытка получить файл с некорректным именем 'wrong_name.txt':")
 vfs.get_file("wrong_name.txt")
 
-ПРИМЕР CVS 
-id,name,value,description
-1,item_a,100,First item
-2,item_b,200,Second item
-3,item_c,150,Third item
+# ПРИМЕР CVS 
+| id,name,value,description
+| 1,item_a,100,First item
+| 2,item_b,200,Second item
+| 3,item_c,150,Third item
