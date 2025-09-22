@@ -1,6 +1,6 @@
 Пример структуры JSON
 Допустим, у нас есть JSON-файл config.json со следующим содержимым:
-
+```
 json
 
 {
@@ -25,7 +25,7 @@ json
     }
   ]
 }
-
+```
 Мы хотим создать VFS, где:
 
 Структура JSON (ключи и вложенные объекты) будет отражать структуру каталогов.
@@ -162,6 +162,7 @@ class JsonVirtualFileSystem:
 # --- Пример использования ---
 
 # 1. Создаем JSON-файл для примера
+
 ```json
 {
   "app_settings": {
@@ -187,6 +188,7 @@ class JsonVirtualFileSystem:
 }
 with open("config.json", "w", encoding="utf-8") as f:
     f.write(json_content)
+```
 
 # 2. Инициализируем нашу VFS
 vfs = JsonVirtualFileSystem("config.json")
