@@ -162,7 +162,7 @@ class JsonVirtualFileSystem:
 # --- Пример использования ---
 
 # 1. Создаем JSON-файл для примера
-json_content = """
+```json
 {
   "app_settings": {
     "version": "1.2.0",
@@ -185,7 +185,6 @@ json_content = """
     }
   ]
 }
-"""
 with open("config.json", "w", encoding="utf-8") as f:
     f.write(json_content)
 
