@@ -1,0 +1,135 @@
+# Программа uvm-input.yaml:
+
+program:
+  - op: load
+    arg: 42
+  - op: write
+    arg: 0
+  - op: load
+    arg: 40
+  - op: ge
+    arg: 0
+
+# Ассемблер uvm-asm:
+
+
+import argparse
+import yaml
+
+# Пример использования:
+# python uvm-asm.py -i uvm-input.yaml -o uvm-output.bin -t 1
+
+def mask(n):
+    return 2 ** n - 1
+
+def asm_const(B: int):
+    cmd = 0
+    cmd |= (B & mask(24)) << 3
+    return cmd.to_bytes(4, "little")
+
+def asm_read():
+    cmd = 1
+    return cmd.to_bytes(4, "little")
+
+def asm_write(B: int):
+    cmd = 7
+    cmd |= (B & mask(15)) << 3
+    return cmd.to_bytes(4, "little")
+
+def asm_ge(B: int):
+    cmd = 4
+    cmd |= (B & mask(15)) << 3
+    return cmd.to_bytes(4, "little")
+
+def asm(program):
+    mass = b""
+    for cmd in program:
+        if cmd["op"] == 'load' :
+            mass += asm_const(cmd["arg"])
+        if cmd["op"] == 'write' :
+            mass += asm_write(cmd["arg"])
+        if cmd["op"] == 'read' :
+            mass += asm_read()                   
+        if cmd["op"] == 'ge' :
+            mass += asm_ge(cmd["arg"])           
+    return mass
+
+def test():
+    assert list(asm_const(1006)) == [
+        0x70, 0x1F, 0x00, 0x00]
+    assert list(asm_read()) == [
+        0x01, 0x00, 0x00, 0x00]
+    assert list(asm_write(713)) == [
+        0x4F, 0x16, 0x00, 0x00]
+    assert list(asm_ge(278)) == [
+        0xB4, 0x08, 0x00, 0x00]
+
+test()
+parser = argparse.ArgumentParser()  
+parser.add_argument('-i', '--input')  
+parser.add_argument('-o', '--output')     
+parser.add_argument('-t', '--test')  
+
+args = parser.parse_args()
+print(args.input, args.output, args.test)
+
+with open(args.input, 'r') as file:
+    data = yaml.load(file, Loader=yaml.FullLoader)
+
+program = data['program']
+test = int(args.test) != 0
+if test:
+    print(program)
+
+asm_result = asm(program)
+with open(args.output, "wb") as f:
+    f.write(asm_result)
+
+size = len(asm_result)
+print(size, "bytes")
+if test:
+    for b in asm_result:
+        print(hex(b), end=" ")
+
+
+# Интерпретатор uvm-interp:
+
+
+import argparse
+
+# Пример использования:
+# python uvm-interp.py -i uvm-output.bin
+
+def mask(n):
+    return 2 ** n - 1
+
+reg = 0
+mem = [0] * 50  
+
+def execute(bytecode):
+    global reg
+    for i in range (0, len(bytecode), 4):
+        cmd = bytecode[i:i+4]
+        cmd = int.from_bytes(cmd, 'little')
+        op = cmd & 0b111
+        if op == 0:
+            const = (cmd >> 3) & mask(24)
+            reg = const
+        if op == 1:
+            reg = mem[reg]
+        if op == 7:
+            addr = (cmd >> 3) & mask(15)
+            mem[addr] = reg
+        if op == 4:
+            addr = (cmd >> 3) & mask(15)
+            reg = reg >= mem[addr]
+
+parser = argparse.ArgumentParser()  
+parser.add_argument('-i', '--input')
+
+args = parser.parse_args()
+with open(args.input, "rb") as f:
+    bytecode = f.read()
+
+execute(bytecode)
+print(reg, mem)
